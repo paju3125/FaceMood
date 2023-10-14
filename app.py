@@ -5,8 +5,8 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from mediapipe.python.solutions.drawing_utils import _normalized_to_pixel_coordinates
 
-from helper import get_models, get_image_file, get_video_file, mediapipe_detection, opencv_detection
-from helper import mp_face_detection, mp_drawing, emotion_dict
+from utils.utils import get_models, get_image_file, get_video_file, mediapipe_detection, opencv_detection
+from utils.utils import mp_face_detection, mp_drawing, emotion_dict, rescale
 
 # Add Sidebar and Main Window style
 st.markdown(
@@ -89,16 +89,16 @@ elif app_mode == 'Image':
 elif app_mode == 'Video':
 
     # Sidebar
-    model = get_models()
     st.set_option('deprecation.showfileUploaderEncoding', False)
     use_webcam = st.sidebar.checkbox('Use Webcam')
     st.sidebar.divider()
 
+    model = get_models()
     detection_confidence = st.sidebar.slider('Min Detection Confidence', min_value=0.0, max_value=1.0, value=0.5)
     st.sidebar.divider()
 
     # Get Video
-    stream = st.image("assets/multi face.jpg", use_column_width=True)
+    stream = st.image("./assets/multi face.jpg", use_column_width=True)
 
     video = get_video_file(use_webcam)
 
@@ -131,7 +131,10 @@ elif app_mode == 'Video':
 
                         # Crop image to face
                         cimg = frame[x[1]:y[1], x[0]:y[0]]
-                        cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0)
+                        if rescale():
+                            cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0)
+                        else:
+                            cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0) / 255.
 
                         # get model prediction
                         pred = model.predict(cropped_img)

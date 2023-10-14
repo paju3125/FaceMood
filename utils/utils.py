@@ -1,3 +1,4 @@
+import os
 import tempfile
 
 import cv2 as cv
@@ -7,29 +8,39 @@ import streamlit as st
 import tensorflow as tf
 
 from mediapipe.python.solutions.drawing_utils import _normalized_to_pixel_coordinates
+from .modelutils import my_new_model
 
 # emotions dictionary
 emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fear", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
 
 # load the cascade file
-face_cascade = cv.CascadeClassifier('haarcascade_frontalface_alt.xml')
+face_cascade = cv.CascadeClassifier('./haarcascade_frontalface_alt.xml')
+
+
 
 # load mediapipe model and drawing utils
 mp_face_detection = mp.solutions.face_detection
 mp_drawing = mp.solutions.drawing_utils
+model_type = None
 
 
 # get model on the choice of the user
 def get_models():
-    model_type = st.sidebar.selectbox('Model', ('Model 1', 'Model 2', 'Model 3 Lstm'))
+    global model_type
+    model_type = st.sidebar.selectbox('Model', ('Model with VGG', 'Model with VGG 3', 'Model 3 LSTM'))
 
     # load emotion model
-    if model_type == 'Model 1':
+    if model_type == 'Model with VGG':
+        
         return tf.keras.models.load_model('./models/base_1_overfit.h5')
-    elif model_type == 'Model 2':
+    elif model_type == 'Model with VGG 3':
+        return my_new_model()
+    else:
         return tf.keras.models.load_model('./models/model_1.h5')
-    elif model_type == 'Model 3 Lstm':
-        return tf.keras.models.load_model('./models/lstm_1_emotion.h5')
+
+
+def rescale():
+    return model_type == 'Model with VGG'
 
 
 def get_image_file():
@@ -42,7 +53,7 @@ def get_image_file():
         return cv.imdecode(image_file, 1)
     else:
         # read demo image
-        demo_image = "assets/single face 2.jpg"
+        demo_image = "./assets/single face 2.jpg"
         return cv.imread(demo_image)
 
 
@@ -83,7 +94,10 @@ def mediapipe_detection(detection_confidence, image, model, mode):
 
                 # Crop image to face
                 cimg = image[x[1] - 20:y[1] + 20, x[0] - 20:y[0] + 20]
-                cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0)
+                if rescale():
+                    cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0)
+                else:
+                    cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0) / 255.
 
                 # get model prediction
                 pred = model.predict(cropped_img)
@@ -116,7 +130,10 @@ def opencv_detection(image, model, mode):
 
         # Crop image to face
         cimg = image[y:y + h, x:x + w]
-        cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0)
+        if rescale():
+            cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0)
+        else:
+            cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0) / 255.
 
         # get model prediction
         pred = model.predict(cropped_img)
