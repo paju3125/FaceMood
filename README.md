@@ -1,6 +1,6 @@
 # FaceMood
 
-<p align="justify">Step into the realm of emotion analysis with FaceMood, an innovative web application meticulously developed to decode facial expressions in real-time. Seamlessly blending Streamlit's user-friendly web interface, the prowess of OpenCV and MediaPipe for live webcam interactions, and the robust intelligence of Keras and TensorFlow for emotion recognition, FaceMood brings forth a captivating experience. Witness the convergence of technology and human emotion as FaceMood unravels the unspoken through expressions – your emotions, our insight.</p>
+<p style="text-align: justify">Step into the realm of emotion analysis with FaceMood, an innovative web application meticulously developed to decode facial expressions in real-time. Seamlessly blending Streamlit's user-friendly web interface, the prowess of OpenCV and MediaPipe for live webcam interactions, and the robust intelligence of Keras and TensorFlow for emotion recognition, FaceMood brings forth a captivating experience. Witness the convergence of technology and human emotion as FaceMood unravels the unspoken through expressions – your emotions, our insight.</p>
 
 ---
 ## Installation
