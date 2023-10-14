@@ -14,13 +14,9 @@ from .modelutils import my_new_model
 emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fear", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
 
 # load the cascade file
-<<<<<<< HEAD
 face_cascade = cv.CascadeClassifier('./haarcascade_frontalface_alt.xml')
 
 
-=======
-face_cascade = cv.CascadeClassifier('../haarcascade_frontalface_alt.xml')
->>>>>>> f3b7e81d353be2c9d09fd1bff97bfe382e5e6200
 
 # load mediapipe model and drawing utils
 mp_face_detection = mp.solutions.face_detection
@@ -35,34 +31,16 @@ def get_models():
 
     # load emotion model
     if model_type == 'Model with VGG':
-<<<<<<< HEAD
         
         return tf.keras.models.load_model('./models/base_1_overfit.h5')
     elif model_type == 'Model with VGG 3':
         return my_new_model()
     else:
         return tf.keras.models.load_model('./models/model_1.h5')
-=======
-        return tf.keras.models.load_model('./models/base_1_overfit.h5')
-<<<<<<<< HEAD:helper.py
-    elif model_type == 'Model 2':
-        return tf.keras.models.load_model('./models/model_1.h5')
-    elif model_type == 'Model 3 Lstm':
-        return tf.keras.models.load_model('./models/lstm_1_emotion.h5')
-========
-    elif model_type == 'Model with VGG 3':
-        return my_new_model()
-    else:
-        return tf.keras.models.load_model('./models/lstm_1_emotion/')
->>>>>>> f3b7e81d353be2c9d09fd1bff97bfe382e5e6200
 
 
 def rescale():
     return model_type == 'Model with VGG'
-<<<<<<< HEAD
-=======
->>>>>>>> f3b7e81d353be2c9d09fd1bff97bfe382e5e6200:utils/utils.py
->>>>>>> f3b7e81d353be2c9d09fd1bff97bfe382e5e6200
 
 
 def get_image_file():
@@ -168,8 +146,4 @@ def opencv_detection(image, model, mode):
             st.image(cv.resize(cimg, (300, 300)), channels="BGR", caption='Cropped Image')
 
     if mode == 'With full image':
-<<<<<<< HEAD
         st.image(out_img, channels="BGR", use_column_width=True)
-=======
-        st.image(out_img, channels="BGR", use_column_width=True)
->>>>>>> f3b7e81d353be2c9d09fd1bff97bfe382e5e6200

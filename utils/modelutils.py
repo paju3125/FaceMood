@@ -23,8 +23,4 @@ def my_new_model():
 
     model.load_weights('./models/new_model/checkpoint (1)')
 
-<<<<<<< HEAD
     return model
-=======
-    return model
->>>>>>> f3b7e81d353be2c9d09fd1bff97bfe382e5e6200
