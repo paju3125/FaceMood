@@ -10,6 +10,8 @@ import tensorflow as tf
 from mediapipe.python.solutions.drawing_utils import _normalized_to_pixel_coordinates
 from .modelutils import my_new_model
 
+
+
 # emotions dictionary
 emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fear", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
 
@@ -31,10 +33,11 @@ def get_models():
 
     # load emotion model
     if model_type == 'Model with VGG':
-        
+        print(tf.keras.models.load_model('./models/base_1_overfit.h5').summary())
+        print('hii')
         return tf.keras.models.load_model('./models/base_1_overfit.h5')
     elif model_type == 'Model with VGG 3':
-        return my_new_model()
+        return tf.keras.models.load_model('./models/emotion_recognition_model.h5')
     else:
         return tf.keras.models.load_model('./models/model_1.h5')
 
@@ -43,8 +46,39 @@ def rescale():
     return model_type == 'Model with VGG'
 
 
+# Image enhancement options
+def enhance_image(image):
+    # Apply sharpening kernel
+    kernel = np.array([[-1, -1, -1],
+                       [-1, 9, -1],
+                       [-1, -1, -1]])
+    enhanced_image = cv.filter2D(image, -1, kernel)
+
+    return enhanced_image
+
+def enhance_image_with_histogram_equalization(image):
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    enhanced_image = cv.equalizeHist(gray)
+    return cv.cvtColor(enhanced_image, cv.COLOR_GRAY2BGR)
+
+def enhance_image_with_adaptive_histogram_equalization(image):
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    clahe = cv.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    enhanced_image = clahe.apply(gray)
+    return cv.cvtColor(enhanced_image, cv.COLOR_GRAY2BGR)
+
+def enhance_image_with_unsharp_masking(image):
+    blurred = cv.GaussianBlur(image, (0, 0), 10)
+    enhanced_image = cv.addWeighted(image, 1.5, blurred, -0.5, 0)
+    return enhanced_image
+
+def enhance_image_with_bilateral_filter(image):
+    enhanced_image = cv.bilateralFilter(image, d=9, sigmaColor=75, sigmaSpace=75)
+    return enhanced_image
+
 def get_image_file():
-    img_file_buffer = st.sidebar.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
+    img_file_buffer = st.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
+    st.divider()
 
     # Check if image is uploaded or not
     if img_file_buffer is not None:
@@ -147,3 +181,5 @@ def opencv_detection(image, model, mode):
 
     if mode == 'With full image':
         st.image(out_img, channels="BGR", use_column_width=True)
+
+

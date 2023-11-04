@@ -6,7 +6,11 @@ from streamlit_option_menu import option_menu
 from mediapipe.python.solutions.drawing_utils import _normalized_to_pixel_coordinates
 
 from utils.utils import get_models, get_image_file, get_video_file, mediapipe_detection, opencv_detection
-from utils.utils import mp_face_detection, mp_drawing, emotion_dict, rescale
+from utils.utils import mp_face_detection, mp_drawing, emotion_dict, rescale, enhance_image, enhance_image_with_adaptive_histogram_equalization, enhance_image_with_histogram_equalization, enhance_image_with_unsharp_masking, enhance_image_with_bilateral_filter
+
+import tensorflow as tf
+from tensorflow.keras.applications.vgg16 import preprocess_input
+from tensorflow.keras.models import Model
 
 # Add Sidebar and Main Window style
 st.markdown(
@@ -34,9 +38,10 @@ st.markdown(
 
 # Basic App Scaffolding
 st.title('Facial Emotion Recognition')
+st.divider()
 
 with st.sidebar:
-    st.title('FaceMood')
+    st.title('FaceVibes')
     st.divider()
     # Define available pages in selection box
     app_mode = option_menu("Page", ["About", "Image", "Video"],
@@ -51,8 +56,8 @@ with st.sidebar:
 # About Page
 if app_mode == 'About':
     st.markdown('''
-                ## Face Mood \n
-                In this application we are using **MediaPipe** for the Face Detection.
+                ## FaceVibes \n
+                In this application we are using **OpenCV & MediaPipe** for the Face Detection.
                 **Tensorflow** is to create the Facial Emotion Recognition Model.
                 **StreamLit** is to create the Web Graphical User Interface (GUI) \n
 
@@ -63,6 +68,7 @@ if app_mode == 'About':
 elif app_mode == 'Image':
 
     # Sidebar
+    st.sidebar.divider()
     model = get_models()
     mode = st.sidebar.radio('Mode', ('With full image', 'With cropped image'))
     detection_type = st.sidebar.radio('Detection Type', ['Mediapipe', 'OpenCV'])
@@ -75,14 +81,37 @@ elif app_mode == 'Image':
 
     image = get_image_file()
 
+    
+    
     # Display Original Image on Sidebar
     st.sidebar.write('Original Image')
     st.sidebar.image(cv.cvtColor(image, cv.COLOR_BGR2RGB), use_column_width=True)
 
-    if detection_type == 'Mediapipe':
-        mediapipe_detection(detection_confidence, image, model, mode)
+
+    # Enhance the inputed image
+    # image = enhance_image(image=image)
+    # image = enhance_image_with_adaptive_histogram_equalization(image)
+    st.sidebar.divider()
+    st.sidebar.write('Image Enhancement Options')
+    enhancement_option = st.sidebar.selectbox('Select Enhancement Technique', ['None', 'Histogram Equalization', 'Adaptive Histogram Equalization', 'Unsharp Masking', 'Bilateral Filter'])
+    if enhancement_option == 'Histogram Equalization':
+        enhanced_image = enhance_image_with_histogram_equalization(image)
+    elif enhancement_option == 'Adaptive Histogram Equalization':
+        enhanced_image = enhance_image_with_adaptive_histogram_equalization(image)
+    elif enhancement_option == 'Unsharp Masking':
+        enhanced_image = enhance_image_with_unsharp_masking(image)
+    elif enhancement_option == 'Bilateral Filter':
+        enhanced_image = enhance_image_with_bilateral_filter(image)
     else:
-        opencv_detection(image, model, mode)
+        enhanced_image = image
+
+    st.sidebar.image(enhanced_image, use_column_width=True, channels='BGR')
+
+    if detection_type == 'Mediapipe':
+        mediapipe_detection(detection_confidence, enhanced_image, model, mode)
+    else:
+        opencv_detection(enhanced_image, model, mode)
+    
 
 
 # Video Page
@@ -103,6 +132,7 @@ elif app_mode == 'Video':
     video = get_video_file(use_webcam)
 
     with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=detection_confidence) as face_detection:
+        bg_subtractor = cv.createBackgroundSubtractorMOG2()
         while use_webcam:
             ret, frame = video.read()
             image = frame.copy()
@@ -113,6 +143,10 @@ elif app_mode == 'Video':
                 break
 
             img = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+            
+            # Add background subtraction to isolate the foreground (faces)
+            fg_mask = bg_subtractor.apply(img)
+            img = cv.bitwise_and(img, img, fg_mask)
             results = face_detection.process(img)
 
             image_rows, image_cols, _ = frame.shape
@@ -135,6 +169,8 @@ elif app_mode == 'Video':
                             cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0)
                         else:
                             cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0) / 255.
+                        
+                        
 
                         # get model prediction
                         pred = model.predict(cropped_img)
