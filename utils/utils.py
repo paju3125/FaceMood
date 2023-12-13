@@ -10,6 +10,7 @@ import tensorflow as tf
 from mediapipe.python.solutions.drawing_utils import _normalized_to_pixel_coordinates
 from .modelutils import my_new_model
 
+from tensorflow.keras.utils import get_file
 
 
 # emotions dictionary
@@ -18,6 +19,7 @@ emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fear", 3: "Happy", 4: "Neutral",
 # load the cascade file
 face_cascade = cv.CascadeClassifier('./haarcascade_frontalface_alt.xml')
 
+model_url = 'https://fer-model.s3.ap-south-1.amazonaws.com/base_1_overfit.h5'
 
 
 # load mediapipe model and drawing utils
@@ -33,9 +35,10 @@ def get_models():
 
     # load emotion model
     if model_type == 'Model with VGG':
-        print(tf.keras.models.load_model('./models/base_1_overfit.h5').summary())
-        print('hii')
-        return tf.keras.models.load_model('./models/base_1_overfit.h5')
+        model_path = get_file('base_1_overfit.h5', model_url, cache_subdir='models')
+        model = tf.keras.models.load_model(model_path)
+        print(model.summary())
+        return model
     elif model_type == 'Model with VGG 3':
         return tf.keras.models.load_model('./models/emotion_recognition_model.h5')
     else:
