@@ -134,58 +134,61 @@ elif app_mode == 'Video':
     with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=detection_confidence) as face_detection:
         bg_subtractor = cv.createBackgroundSubtractorMOG2()
         while use_webcam:
-            ret, frame = video.read()
-            image = frame.copy()
+            try:
+                ret, frame = video.read()
+                image = frame.copy()
 
-            if not ret:
-                print("Ignoring empty camera frame.")
-                video.release()
-                break
+                if not ret:
+                    print("Ignoring empty camera frame.")
+                    video.release()
+                    break
 
-            img = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-            
-            # Add background subtraction to isolate the foreground (faces)
-            fg_mask = bg_subtractor.apply(img)
-            img = cv.bitwise_and(img, img, fg_mask)
-            results = face_detection.process(img)
+                img = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+                
+                # Add background subtraction to isolate the foreground (faces)
+                fg_mask = bg_subtractor.apply(img)
+                img = cv.bitwise_and(img, img, fg_mask)
+                results = face_detection.process(img)
 
-            image_rows, image_cols, _ = frame.shape
+                image_rows, image_cols, _ = frame.shape
 
-            if results.detections:
-                for detection in results.detections:
-                    try:
-                        box = detection.location_data.relative_bounding_box
+                if results.detections:
+                    for detection in results.detections:
+                        try:
+                            box = detection.location_data.relative_bounding_box
 
-                        x = _normalized_to_pixel_coordinates(box.xmin, box.ymin, image_cols, image_rows)
-                        y = _normalized_to_pixel_coordinates(box.xmin + box.width, box.ymin + box.height, image_cols,
-                                                             image_rows)
+                            x = _normalized_to_pixel_coordinates(box.xmin, box.ymin, image_cols, image_rows)
+                            y = _normalized_to_pixel_coordinates(box.xmin + box.width, box.ymin + box.height, image_cols,
+                                                                image_rows)
 
-                        # Draw face detection box
-                        mp_drawing.draw_detection(image, detection)
+                            # Draw face detection box
+                            mp_drawing.draw_detection(image, detection)
 
-                        # Crop image to face
-                        cimg = frame[x[1]:y[1], x[0]:y[0]]
-                        if rescale():
-                            cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0)
-                        else:
-                            cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0) / 255.
-                        
-                        
+                            # Crop image to face
+                            cimg = frame[x[1]:y[1], x[0]:y[0]]
+                            if rescale():
+                                cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0)
+                            else:
+                                cropped_img = np.expand_dims(cv.resize(cimg, (48, 48)), 0) / 255.
+                            
+                            
 
-                        # get model prediction
-                        pred = model.predict(cropped_img)
-                        idx = int(np.argmax(pred))
+                            # get model prediction
+                            pred = model.predict(cropped_img)
+                            idx = int(np.argmax(pred))
 
-                        image = cv.flip(image, 1)
-                        cv.putText(image, emotion_dict[idx], (image_rows - x[0], x[1] - 10), cv.FONT_HERSHEY_SIMPLEX, 1,
-                                   (255, 255, 255), 2, cv.LINE_AA)
-                        image = cv.flip(image, 1)
+                            image = cv.flip(image, 1)
+                            cv.putText(image, emotion_dict[idx], (image_rows - x[0], x[1] - 10), cv.FONT_HERSHEY_SIMPLEX, 1,
+                                    (255, 255, 255), 2, cv.LINE_AA)
+                            image = cv.flip(image, 1)
 
-                    except Exception:
-                        print("Ignoring empty camera frame.")
-                        pass
+                        except Exception:
+                            print("Ignoring empty camera frame.")
+                            pass
 
-            stream.image(cv.flip(image, 1), channels="BGR", use_column_width=True)
+                stream.image(cv.flip(image, 1), channels="BGR", use_column_width=True)
 
+            except Exception as e:
+                pass
         if video is not None:
             video.release()
