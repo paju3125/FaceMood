@@ -135,6 +135,12 @@ elif app_mode == 'Video':
         bg_subtractor = cv.createBackgroundSubtractorMOG2()
         while use_webcam:
             try:
+                video = cv.VideoCapture(0)  # 0 for default camera
+                if not video.isOpened():
+                    raise Exception("Could not open video device.")
+            except Exception as e:
+                print(f"Error: {e}")
+            try:
                 ret, frame = video.read()
                 image = frame.copy()
 
