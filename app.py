@@ -198,3 +198,6 @@ elif app_mode == 'Video':
                 pass
         if video is not None:
             video.release()
+            
+            
+            
